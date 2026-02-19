@@ -1,0 +1,19 @@
+{
+  "name": "blog_website",
+  "version": "1.0.0",
+  "description": "In-memory blog app built with Express and EJS",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "express",
+    "ejs",
+    "blog"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  }
+}
