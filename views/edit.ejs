@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Post</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container form-page">
+      <h1>Edit Post</h1>
+      <% if (error) { %>
+      <p class="error"><%= error %></p>
+      <% } %>
+
+      <form class="post-form" action="/posts/<%= post.id %>/update" method="POST">
+        <label for="title">Title</label>
+        <input id="title" name="title" required value="<%= post.title %>" />
+
+        <label for="author">Author</label>
+        <input id="author" name="author" value="<%= post.author %>" />
+
+        <label for="content">Content</label>
+        <textarea id="content" name="content" rows="10" required><%= post.content %></textarea>
+
+        <div class="actions">
+          <button class="button button-primary" type="submit">Save Changes</button>
+          <a class="button" href="/">Back</a>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>
