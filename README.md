@@ -27,3 +27,5 @@ npm start
 Then open `http://localhost:3000`.
 
 > Note: Posts are stored in memory and reset when the server restarts.
+> THIS PROJECT IS A PRATICE AI GENERATED PROJECT THROUGH WHICH I AM GAINING NEW SKILLS
+
