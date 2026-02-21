@@ -18,13 +18,19 @@ app.get('/', (req, res) => {
 });
 
 app.get('/posts/new', (req, res) => {
-  res.render('new');
+  // pass an empty values object to avoid undefined errors in template
+  res.render('new', { error: null, values: {} });
 });
 
 app.post('/posts', (req, res) => {
   const { title, content, author } = req.body;
 
+  console.log('POST /posts body:', req.body);
+  console.log('Current posts before insert:', posts);
+  console.log('nextId before insert:', nextId);
+
   if (!title || !content) {
+    console.log('Validation failed, returning to new with values:', { title, content, author });
     return res.status(400).render('new', {
       error: 'Title and content are required.',
       values: { title, content, author }
@@ -38,6 +44,8 @@ app.post('/posts', (req, res) => {
     author: author?.trim() || 'Anonymous',
     createdAt: new Date()
   });
+
+  console.log('Posts after insert:', posts);
 
   return res.redirect('/');
 });
@@ -55,6 +63,9 @@ app.get('/posts/:id/edit', (req, res) => {
 
 app.post('/posts/:id/update', (req, res) => {
   const id = Number(req.params.id);
+  console.log(`POST /posts/${id}/update body:`, req.body);
+  console.log('Posts before update:', posts);
+
   const post = posts.find((item) => item.id === id);
 
   if (!post) {
@@ -79,6 +90,8 @@ app.post('/posts/:id/update', (req, res) => {
   post.content = content.trim();
   post.author = author?.trim() || 'Anonymous';
 
+  console.log('Posts after update:', posts);
+  
   return res.redirect('/');
 });
 
@@ -89,5 +102,5 @@ app.post('/posts/:id/delete', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Blog app listening on http://localhost:${port}`);
+  console.log(`Blog app listening on http://localhost:${3000}`);
 });
