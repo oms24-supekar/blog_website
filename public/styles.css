@@ -1,11 +1,18 @@
 :root {
-  --bg: #f5f7fb;
+  --bg: linear-gradient(
+    135deg,
+    #ff6a88,
+    #d63384,
+    #7b2cbf,
+    #3a0ca3
+  );
   --card: #ffffff;
   --text: #1f2937;
   --muted: #6b7280;
   --primary: #3b82f6;
   --primary-dark: #2563eb;
   --danger: #dc2626;
+  --container: rgb(255, 247, 0);
 }
 
 * {
@@ -13,7 +20,7 @@
 }
 
 body {
-  margin: 0;
+  margin: 10;
   font-family: Arial, Helvetica, sans-serif;
   background: var(--bg);
   color: var(--text);
