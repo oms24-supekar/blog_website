@@ -14,13 +14,13 @@
       <% } %>
       <form class="post-form" action="/posts" method="POST">
         <label for="title">Title</label>
-        <input id="title" name="title" required value="<%= values?.title || '' %>" />
+        <input id="title" name="title" required value="<%= (values && values.title) || '' %>" />
 
         <label for="author">Author</label>
-        <input id="author" name="author" value="<%= values?.author || '' %>" />
+        <input id="author" name="author" value="<%= (values && values.author) || '' %>" />
 
         <label for="content">Content</label>
-        <textarea id="content" name="content" rows="10" required><%= values?.content || '' %></textarea>
+        <textarea id="content" name="content" rows="10" required><%= (values && values.content) || '' %></textarea>
 
         <div class="actions">
           <button class="button button-primary" type="submit">Publish Post</button>
