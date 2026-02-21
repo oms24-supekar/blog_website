@@ -3,20 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Blog</title>
+    <title> Blog Hub</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="container page-header">
-      <h1>My Blog</h1>
+      <h1>Blog Hub</h1>
       <a class="button button-primary" href="/posts/new">Create New Post</a>
     </header>
 
     <main class="container">
       <% if (posts.length === 0) { %>
       <section class="empty-state">
-        <h2>No posts yet</h2>
-        <p>Write your first post to get started.</p>
+      <p>Write your first post to get started.</p>
       </section>
       <% } %>
 
