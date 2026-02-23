@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog Hub</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="container page-header">
+      <h1>Blog Hub</h1>
+      <button class="button button-primary" id="createPostBtn">Create New Post</button>
+    </header>
+
+    <main class="container">
+      <!-- Modal for Create/Edit Post -->
+      <div id="postModal" class="modal hidden">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2 id="modalTitle">Create a New Post</h2>
+          <form id="postForm" class="post-form">
+            <label for="title">Title</label>
+            <input id="title" name="title" required />
+
+            <label for="author">Author</label>
+            <input id="author" name="author" />
+
+            <label for="domain">Domain (hierarchy, use slashes to separate levels)</label>
+            <input id="domain" name="domain" placeholder="e.g. technology/web/javascript" />
+
+            <label for="content">Content</label>
+            <textarea id="content" name="content" rows="10" required></textarea>
+
+            <div class="actions">
+              <button class="button button-primary" type="submit" id="submitBtn">Publish Post</button>
+              <button class="button" type="button" id="cancelBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Category Filter Display -->
+      <div id="categoryInfo" class="category-info hidden">
+        <h2>Showing category: <span id="categoryName"></span></h2>
+        <button class="button" id="clearCategoryBtn">Show all posts</button>
+      </div>
+
+      <!-- Posts List -->
+      <section id="postsContainer">
+        <section class="empty-state" id="emptyState">
+          <p>Write your first post to get started.</p>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
