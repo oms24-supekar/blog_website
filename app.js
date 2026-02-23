@@ -1,6 +1,9 @@
 // ============================================================================
-// Blog App - Vanilla JavaScript + localStorage
+// Blog App - Vanilla JavaScript + localStorage + MongoDB API
 // ============================================================================
+
+const API_BASE = '/api/posts';
+const USE_API = true; // Set to false to use localStorage only (offline mode)
 
 class BlogApp {
   constructor() {
@@ -8,21 +11,51 @@ class BlogApp {
     this.nextId = 1;
     this.editingId = null;
     this.currentCategory = null;
+    this.apiAvailable = true;
     this.init();
   }
 
   init() {
-    this.loadFromStorage();
+    this.loadInitialData();
     this.setupEventListeners();
     this.render();
   }
 
-  // ========== Storage ==========
+  // ========== Data Loading ==========
+  async loadInitialData() {
+    if (USE_API) {
+      await this.loadFromAPI();
+    } else {
+      this.loadFromStorage();
+    }
+  }
+
+  async loadFromAPI() {
+    try {
+      const response = await fetch(API_BASE);
+      if (response.ok) {
+        const data = await response.json();
+        this.posts = data.map((post) => ({
+          ...post,
+          id: post._id, // MongoDB uses _id
+          createdAt: post.createdAt,
+        }));
+        this.apiAvailable = true;
+        // Update localStorage as cache
+        this.saveToStorage();
+      }
+    } catch (err) {
+      console.warn('API unavailable, falling back to localStorage:', err);
+      this.apiAvailable = false;
+      this.loadFromStorage();
+    }
+  }
+
   loadFromStorage() {
     const data = localStorage.getItem('blog_posts');
     if (data) {
       this.posts = JSON.parse(data);
-      const maxId = this.posts.reduce((max, p) => Math.max(max, p.id), 0);
+      const maxId = this.posts.reduce((max, p) => Math.max(max, p.id || 0), 0);
       this.nextId = maxId + 1;
     }
   }
@@ -84,7 +117,7 @@ class BlogApp {
     this.editingId = null;
   }
 
-  handleFormSubmit(e) {
+  async handleFormSubmit(e) {
     e.preventDefault();
 
     const title = document.getElementById('title').value.trim();
@@ -97,38 +130,97 @@ class BlogApp {
       return;
     }
 
-    if (this.editingId) {
-      // Update
-      const post = this.posts.find((p) => p.id === this.editingId);
-      if (post) {
-        post.title = title;
-        post.author = author;
-        post.domain = domain;
-        post.content = content;
+    try {
+      if (this.editingId) {
+        await this.updatePost(this.editingId, { title, author, domain, content });
+      } else {
+        await this.createPost({ title, author, domain, content });
       }
-    } else {
-      // Create
-      this.posts.unshift({
-        id: this.nextId++,
-        title,
-        author,
-        domain,
-        content,
-        createdAt: new Date().toISOString(),
-      });
+      this.saveToStorage();
+      this.closeModal();
+      this.render();
+    } catch (err) {
+      alert('Error saving post: ' + err.message);
     }
-
-    this.saveToStorage();
-    this.closeModal();
-    this.render();
   }
 
-  // ========== CRUD ==========
-  deletePost(postId) {
-    if (confirm('Are you sure you want to delete this post?')) {
+  // ========== API Calls ==========
+  async createPost(data) {
+    if (!this.apiAvailable || !USE_API) {
+      // Offline: save to localStorage only
+      this.posts.unshift({
+        id: this.nextId++,
+        ...data,
+        createdAt: new Date().toISOString(),
+      });
+      return;
+    }
+
+    const response = await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create post');
+    }
+
+    const post = await response.json();
+    this.posts.unshift({
+      ...post,
+      id: post._id,
+    });
+  }
+
+  async updatePost(postId, data) {
+    if (!this.apiAvailable || !USE_API) {
+      // Offline: update localStorage only
+      const post = this.posts.find((p) => p.id === postId);
+      if (post) {
+        Object.assign(post, data);
+      }
+      return;
+    }
+
+    const response = await fetch(`${API_BASE}/${postId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update post');
+    }
+
+    const updated = await response.json();
+    const post = this.posts.find((p) => p.id === postId);
+    if (post) {
+      Object.assign(post, { ...updated, id: updated._id });
+    }
+  }
+
+  async deletePost(postId) {
+    if (!confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    try {
+      if (this.apiAvailable && USE_API) {
+        const response = await fetch(`${API_BASE}/${postId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete post');
+        }
+      }
+
       this.posts = this.posts.filter((p) => p.id !== postId);
       this.saveToStorage();
       this.render();
+    } catch (err) {
+      alert('Error deleting post: ' + err.message);
     }
   }
 
@@ -195,7 +287,6 @@ class BlogApp {
     const displayPosts = this.getDisplayPosts();
     const tree = this.buildCategoryTree(displayPosts);
 
-    // Check if there are any posts at all
     const hasAnyPosts = (node) => {
       if (node.posts && node.posts.length) return true;
       return Object.values(node.children || {}).some(hasAnyPosts);
@@ -211,7 +302,6 @@ class BlogApp {
   }
 
   renderNode(container, node, level, path) {
-    // Render posts at this level
     if (node.posts && node.posts.length) {
       const section = document.createElement('section');
       section.className = `post-list level-${level}`;
@@ -246,7 +336,6 @@ class BlogApp {
       container.appendChild(section);
     }
 
-    // Render child categories
     Object.keys(node.children || {}).forEach((name) => {
       const childPath = path ? `${path}/${name}` : name;
       const categoryDiv = document.createElement('div');
