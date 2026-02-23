@@ -153,3 +153,19 @@ textarea {
     gap: 0.2rem;
   }
 }
+
+/* hierarchical category levels */
+.category {
+  margin-top: 1.5rem;
+}
+.category .post-list {
+  margin-left: 1.5rem;
+}
+.level-1 .post-list { margin-left: 1.5rem; }
+.level-2 .post-list { margin-left: 3rem; }
+.level-3 .post-list { margin-left: 4.5rem; }
+
+.domain {
+  font-style: italic;
+  color: var(--muted);
+}

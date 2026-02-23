@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create Post</title>
     <link rel="stylesheet" href="/styles.css" />
+    <!-- optional UI upgrade styles -->
+    <link rel="stylesheet" href="/ui-upgrades.css" />
   </head>
   <body>
     <main class="container form-page">
@@ -21,6 +23,9 @@
 
         <label for="content">Content</label>
         <textarea id="content" name="content" rows="10" required><%= (values && values.content) || '' %></textarea>
+
+        <label for="domain">Domain (hierarchy, use slashes to separate levels)</label>
+        <input id="domain" name="domain" value="<%= (values && values.domain) || '' %>" placeholder="e.g. technology/web/javascript" />
 
         <div class="actions">
           <button class="button button-primary" type="submit">Publish Post</button>

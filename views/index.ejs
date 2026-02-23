@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title> Blog Hub</title>
     <link rel="stylesheet" href="/styles.css" />
+    <!-- optional UI upgrade styles -->
+    <link rel="stylesheet" href="/ui-upgrades.css" />
   </head>
   <body>
     <header class="container page-header">
@@ -13,30 +15,61 @@
     </header>
 
     <main class="container">
-      <% if (posts.length === 0) { %>
+      <% if (typeof currentCategory !== 'undefined' && currentCategory) { %>
+        <h2>Showing category: <%= currentCategory %></h2>
+        <a class="button" href="/">Show all posts</a>
+      <% } %>
+      <% // if there are no posts at all, show empty message %>
+      <% function hasAnyPosts(node) {
+           if (node.posts && node.posts.length) return true;
+           return Object.values(node.children || {}).some(hasAnyPosts);
+         }
+      %>
+      <% if (!hasAnyPosts(tree)) { %>
       <section class="empty-state">
       <p>Write your first post to get started.</p>
       </section>
       <% } %>
 
-      <section class="post-list">
-        <% posts.forEach((post) => { %>
-        <article class="post-card">
-          <div class="post-meta">
-            <p class="author">By <%= post.author %></p>
-            <p><%= post.createdAt.toLocaleString() %></p>
+      <% // recursive renderer for category nodes. `path` holds the full path to this node. %>
+      <% function renderNode(node, level, path) { %>
+        <% if (node.posts && node.posts.length) { %>
+          <section class="post-list level-<%= level %>">
+            <% node.posts.forEach((post) => { %>
+              <article class="post-card">
+                <div class="post-meta">
+                  <p class="author">By <%= post.author %></p>
+                  <p><%= post.createdAt.toLocaleString() %></p>
+                  <% if (post.domain) { %>
+                    <p class="domain"><small><%= post.domain %></small></p>
+                  <% } %>
+                </div>
+                <h2><%= post.title %></h2>
+                <p class="post-content"><%= post.content %></p>
+                <div class="actions">
+                  <a class="button" href="/posts/<%= post.id %>/edit">Edit</a>
+                  <form action="/posts/<%= post.id %>/delete" method="POST">
+                    <button class="button button-danger" type="submit">Delete</button>
+                  </form>
+                </div>
+              </article>
+            <% }) %>
+          </section>
+        <% } %>
+        <% Object.keys(node.children || {}).forEach((name) => { 
+             const childPath = path ? path + '/' + name : name;
+           %>
+          <div class="category level-<%= level %>">
+            <h<%= Math.min(6, level + 2) %>>
+              <a href="/category/<%= encodeURIComponent(childPath) %>"><%= name %></a>
+            </h<%= Math.min(6, level + 2) %>>
+            <% renderNode(node.children[name], level + 1, childPath); %>
           </div>
-          <h2><%= post.title %></h2>
-          <p class="post-content"><%= post.content %></p>
-          <div class="actions">
-            <a class="button" href="/posts/<%= post.id %>/edit">Edit</a>
-            <form action="/posts/<%= post.id %>/delete" method="POST">
-              <button class="button button-danger" type="submit">Delete</button>
-            </form>
-          </div>
-        </article>
         <% }) %>
-      </section>
+      <% } %>
+
+      <% // start rendering from root (empty path)
+         renderNode(tree, 0, ''); %>
     </main>
   </body>
 </html>

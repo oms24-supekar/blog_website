@@ -1,0 +1,67 @@
+/*
+  UI Upgrade stylesheet
+
+  This file is intended to hold additional styles and layout
+  enhancements for a more polished look. Include it after
+  styles.css in your EJS templates to layer on the improvements.
+
+  Example additions provided below:
+
+  1. Dark mode toggle
+  2. Improved card hover effects
+  3. Responsive grid adjustments
+  4. Typography and spacing refinements
+
+  To apply the upgrade styles, add the following line in your
+  <head> section (after the existing styles.css link):
+
+  <link rel="stylesheet" href="/ui-upgrades.css" />
+
+  You can extend or replace any of the variables defined in
+  styles.css by re-declaring them here.
+*/
+
+/* dark mode switch (toggle class "dark-mode" on <body>) */
+body.dark-mode {
+  background: #121212;
+  color: #e0e0e0;
+}
+body.dark-mode .post-card {
+  background: #1e1e1e;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+/* hover effects for post cards */
+.post-card:hover {
+  transform: translateY(-3px);
+  transition: transform 0.2s ease;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
+}
+
+/* improved grid on larger screens */
+@media (min-width: 800px) {
+  .post-list {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+/* typography tweaks */
+h1, h2 {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* button gradient backgrounds */
+.button-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+}
+.button-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+}
+
+/* smooth scrolling and content spacing */
+html {
+  scroll-behavior: smooth;
+}
+.container {
+  padding: 0 1rem;
+}

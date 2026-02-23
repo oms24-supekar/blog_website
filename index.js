@@ -7,6 +7,32 @@ const port = process.env.PORT || 3000;
 let posts = [];
 let nextId = 1;
 
+// helper to build a hierarchical tree based on the "domain" string stored
+// on each post. the path is slash-separated (e.g. "tech/web/javascript").
+// the resulting tree has nodes with `posts` array and `children` object.
+function buildCategoryTree(posts) {
+  const root = { posts: [], children: {} };
+
+  posts.forEach((post) => {
+    const path = post.domain || '';
+    const parts = path
+      .split('/')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    let node = root;
+    parts.forEach((part) => {
+      if (!node.children[part]) {
+        node.children[part] = { posts: [], children: {} };
+      }
+      node = node.children[part];
+    });
+    node.posts.push(post);
+  });
+
+  return root;
+}
+
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -14,7 +40,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-  res.render('index', { posts });
+  // build a category tree for rendering hierarchy on the home page
+  const tree = buildCategoryTree(posts);
+  res.render('index', { tree, currentCategory: null });
+});
+
+// show posts in a specific domain path (and its subdomains)
+app.get('/category/*', (req, res) => {
+  const path = req.params[0]; // wildcard captures everything after /category/
+  const filtered = posts.filter(
+    (post) => post.domain && post.domain.startsWith(path)
+  );
+  const tree = buildCategoryTree(filtered);
+  res.render('index', { tree, currentCategory: path });
 });
 
 app.get('/posts/new', (req, res) => {
@@ -23,17 +61,17 @@ app.get('/posts/new', (req, res) => {
 });
 
 app.post('/posts', (req, res) => {
-  const { title, content, author } = req.body;
+  const { title, content, author, domain } = req.body;
 
   console.log('POST /posts body:', req.body);
   console.log('Current posts before insert:', posts);
   console.log('nextId before insert:', nextId);
 
   if (!title || !content) {
-    console.log('Validation failed, returning to new with values:', { title, content, author });
+    console.log('Validation failed, returning to new with values:', { title, content, author, domain });
     return res.status(400).render('new', {
       error: 'Title and content are required.',
-      values: { title, content, author }
+      values: { title, content, author, domain }
     });
   }
 
@@ -42,6 +80,7 @@ app.post('/posts', (req, res) => {
     title: title.trim(),
     content: content.trim(),
     author: author?.trim() || 'Anonymous',
+    domain: domain?.trim() || '',
     createdAt: new Date()
   });
 
@@ -72,7 +111,7 @@ app.post('/posts/:id/update', (req, res) => {
     return res.status(404).send('Post not found');
   }
 
-  const { title, content, author } = req.body;
+  const { title, content, author, domain } = req.body;
 
   if (!title || !content) {
     return res.status(400).render('edit', {
@@ -81,7 +120,8 @@ app.post('/posts/:id/update', (req, res) => {
         ...post,
         title,
         content,
-        author
+        author,
+        domain
       }
     });
   }
@@ -89,6 +129,7 @@ app.post('/posts/:id/update', (req, res) => {
   post.title = title.trim();
   post.content = content.trim();
   post.author = author?.trim() || 'Anonymous';
+  post.domain = domain?.trim() || '';
 
   console.log('Posts after update:', posts);
   
