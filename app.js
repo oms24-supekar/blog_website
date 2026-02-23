@@ -67,20 +67,35 @@ class BlogApp {
   // ========== Event Listeners ==========
   setupEventListeners() {
     const createBtn = document.getElementById('createPostBtn');
+    const domainBookBtn = document.getElementById('domainBookBtn');
     const modal = document.getElementById('postModal');
+    const domainBookModal = document.getElementById('domainBookModal');
     const closeBtn = document.querySelector('.close');
+    const closeDomainBookBtn = document.getElementById('closeDomainBook');
     const cancelBtn = document.getElementById('cancelBtn');
     const form = document.getElementById('postForm');
     const clearCategoryBtn = document.getElementById('clearCategoryBtn');
 
     createBtn.addEventListener('click', () => this.openModal());
+    domainBookBtn.addEventListener('click', () => this.openDomainBook());
     closeBtn.addEventListener('click', () => this.closeModal());
+    closeDomainBookBtn.addEventListener('click', () => this.closeDomainBook());
     cancelBtn.addEventListener('click', () => this.closeModal());
     window.addEventListener('click', (e) => {
       if (e.target === modal) this.closeModal();
+      if (e.target === domainBookModal) this.closeDomainBook();
     });
     form.addEventListener('submit', (e) => this.handleFormSubmit(e));
     clearCategoryBtn.addEventListener('click', () => this.clearCategory());
+    
+    // Domain book link delegation
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.domain-link')) {
+        const domain = e.target.closest('.domain-link').dataset.domain;
+        this.filterByCategory(domain);
+        this.closeDomainBook();
+      }
+    });
   }
 
   // ========== Modal Management ==========
@@ -115,6 +130,115 @@ class BlogApp {
     const modal = document.getElementById('postModal');
     modal.classList.add('hidden');
     this.editingId = null;
+  }
+
+  // ========== Domain Book ==========
+  openDomainBook() {
+    const domainBookModal = document.getElementById('domainBookModal');
+    domainBookModal.classList.remove('hidden');
+    this.renderDomainBook();
+  }
+
+  closeDomainBook() {
+    const domainBookModal = document.getElementById('domainBookModal');
+    domainBookModal.classList.add('hidden');
+  }
+
+  extractAllDomains() {
+    const domains = new Set();
+    this.posts.forEach((post) => {
+      if (post.domain) {
+        const parts = post.domain.split('/').filter(Boolean);
+        let path = '';
+        parts.forEach((part) => {
+          path = path ? `${path}/${part}` : part;
+          domains.add(path);
+        });
+      }
+    });
+    return Array.from(domains).sort();
+  }
+
+  buildDomainIndex() {
+    const index = {};
+    const allDomains = this.extractAllDomains();
+
+    allDomains.forEach((domain) => {
+      const count = this.posts.filter((p) => p.domain && p.domain.startsWith(domain)).length;
+      index[domain] = count;
+    });
+
+    return index;
+  }
+
+  renderDomainBook() {
+    const container = document.getElementById('domainBookList');
+    const domainIndex = this.buildDomainIndex();
+
+    if (Object.keys(domainIndex).length === 0) {
+      container.innerHTML = '<p class="empty-domains">No domains yet. Create posts with domain paths to populate the domain book.</p>';
+      return;
+    }
+
+    // Group domains by level for visual hierarchy
+    const grouped = this.groupDomainsByLevel(Object.keys(domainIndex));
+    container.innerHTML = this.renderDomainTree(grouped, domainIndex);
+  }
+
+  groupDomainsByLevel(domains) {
+    const root = { children: {} };
+
+    domains.forEach((domain) => {
+      const parts = domain.split('/');
+      let node = root;
+
+      parts.forEach((part, idx) => {
+        if (!node.children[part]) {
+          node.children[part] = { path: parts.slice(0, idx + 1).join('/'), children: {} };
+        }
+        node = node.children[part];
+      });
+    });
+
+    return root;
+  }
+
+  renderDomainTree(node, domainIndex, level = 0) {
+    if (!node.children || Object.keys(node.children).length === 0) {
+      return '';
+    }
+
+    let html = `<div class="domain-tree-level level-${level}">`;
+
+    Object.keys(node.children)
+      .sort()
+      .forEach((name) => {
+        const child = node.children[name];
+        const path = child.path;
+        const count = domainIndex[path] || 0;
+        const hasSubdomains = Object.keys(child.children).length > 0;
+
+        html += `
+          <div class="domain-item">
+            <button 
+              class="domain-link" 
+              data-domain="${path}"
+              title="Click to filter posts in this domain"
+            >
+              📁 ${name}
+              <span class="domain-count">${count} post${count !== 1 ? 's' : ''}</span>
+            </button>
+        `;
+
+        if (hasSubdomains) {
+          html += this.renderDomainTree(child, domainIndex, level + 1);
+        }
+
+        html += `</div>`;
+      });
+
+    html += '</div>';
+    return html;
   }
 
   async handleFormSubmit(e) {

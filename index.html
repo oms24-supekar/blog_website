@@ -9,10 +9,24 @@
   <body>
     <header class="container page-header">
       <h1>Blog Hub</h1>
-      <button class="button button-primary" id="createPostBtn">Create New Post</button>
+      <div class="header-actions">
+        <button class="button" id="domainBookBtn">📚 Domain Book</button>
+        <button class="button button-primary" id="createPostBtn">Create New Post</button>
+      </div>
     </header>
 
     <main class="container">
+      <!-- Domain Book Modal -->
+      <div id="domainBookModal" class="modal hidden">
+        <div class="modal-content">
+          <span class="close" id="closeDomainBook">&times;</span>
+          <h2>📚 Domain Book</h2>
+          <p class="domain-book-subtitle">Browse all categories and topics</p>
+          <p class="domain-book-info">Click a domain to filter posts</p>
+          <div id="domainBookList" class="domain-book-list"></div>
+        </div>
+      </div>
+
       <!-- Modal for Create/Edit Post -->
       <div id="postModal" class="modal hidden">
         <div class="modal-content">
